@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 
 const App = () => {
@@ -11,6 +11,21 @@ const App = () => {
     const [loading, setLoading] = useState(false);
 
     const apiKey = '2d6c0ebc5e5045416717b7bc8134e129'; // Replace with your actual API key
+
+    // Generate random yearly overview data for India
+    const generateYearlyOverview = useCallback(() => {
+        const months = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        const yearlyData = months.map((month) => ({
+            month,
+            averageHumidity: getRandomNumber(60, 80),
+            averageUVIndex: getRandomNumber(5, 8),
+            totalRainfall: getRandomNumber(50, 200),
+        }));
+        setYearlyOverview(yearlyData);
+    }, []); // Empty dependency array because the function doesn't depend on any outside variables
 
     // Fetch current weather data
     const fetchCurrentWeather = async (location) => {
@@ -44,7 +59,7 @@ const App = () => {
     };
 
     // Fetch hourly and daily forecasts
-    const fetchForecasts = async (location) => {
+    const fetchForecasts = useCallback(async (location) => {
         try {
             setLoading(true);
             const url = `https://api.openweathermap.org/data/2.5/forecast?q=${location}&appid=${apiKey}&units=metric`;
@@ -78,22 +93,7 @@ const App = () => {
         } finally {
             setLoading(false);
         }
-    };
-
-    // Generate random yearly overview data for India
-    const generateYearlyOverview = () => {
-        const months = [
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December'
-        ];
-        const yearlyData = months.map((month) => ({
-            month,
-            averageHumidity: getRandomNumber(60, 80),
-            averageUVIndex: getRandomNumber(5, 8),
-            totalRainfall: getRandomNumber(50, 200),
-        }));
-        setYearlyOverview(yearlyData);
-    };
+    }, [generateYearlyOverview]); // Include generateYearlyOverview in the dependency array
 
     // Helper function to generate random number within a range
     const getRandomNumber = (min, max) => {
@@ -113,7 +113,7 @@ const App = () => {
     useEffect(() => {
         fetchCurrentWeather('Delhi'); // Default location set to Delhi
         fetchForecasts('Delhi'); // Default location set to Delhi
-    }, []);
+    }, [fetchForecasts]); // Include fetchForecasts in the dependency array
 
     // Format date and time
     const formatDate = (dt_txt) => {
@@ -128,19 +128,18 @@ const App = () => {
 
     return (
         <div className="App">
-            <div class="header">
-            <h1>Weather App</h1>
-            <form class="search-bar" onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Enter city name"
-                />
-                <button type="submit">Search</button>
-            </form>
-        </div>
-
+            <div className="header">
+                <h1>Weather App</h1>
+                <form className="search-bar" onSubmit={handleSubmit}>
+                    <input
+                        type="text"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="Enter city name"
+                    />
+                    <button type="submit">Search</button>
+                </form>
+            </div>
 
             {loading && <p>Loading...</p>}
 
@@ -253,9 +252,7 @@ const App = () => {
                         </table>
                     </div>
                 )}
-                {error && <p>Error: {error}</p>}
             </div>
-
         </div>
     );
 };
